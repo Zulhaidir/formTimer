@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My form</title>
+    <base target="_top" />
+    <style>
+      html,
+      body {
+        font-family: sans-serif, Arial;
+      }
+
+      .navbar {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #ffffff;
+        z-index: 1;
+      }
+
+      h1 {
+        text-align: center;
+        width: 100%;
+      }
+
+      #timer {
+        display: flex;
+        justify-content: space-between;
+        width: 600px;
+        margin: auto;
+      }
+
+      iframe {
+        padding-top: 120px;
+        margin: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+      }
+    
+      .container {
+        width: 90%;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="navbar">
+        <h1>Try Out Akbar Bimbel PsycoMafia</h1>
+        <div id="timer">
+          <p>
+            Alokasi Waktu:
+            <span id="time-alloted"></span>
+          </p>
+          <p>Sisa Waktu: <span id="time-remaining"></span></p>
+        </div>
+      </div>
+      <iframe
+        id="my-iframe"
+        width="640"
+        frameborder="0"
+        marginheight="0"
+        marginwidth="0"
+        >Loading…</iframe
+      >
+    </div>
+    <script>
+      // set server data
+      const uuid = '<?!= serverData.uuid ?>';
+      const timeAlloted = '<?!= serverData.timeAlloted ?>';
+      // deklarasikan component
+      const iframe = document.querySelector('#my-iframe');
+      const timer = document.querySelector('#timer');
+      const h1 = document.querySelector('h1');
+      const button = document.querySelector('button');
+      const timeRemainingSpan = document.querySelector('#time-remaining');
+      // set iframe
+      let loadCounter = 0;
+      let formSubmitted = false;
+      let formPaused = false;
+      iframe.onload = function() {
+        loadCounter+=1;
+        console.log(loadCounter);
+        if (loadCounter === 1) {
+          iframe.style.height = '800px'
+          updateTimeRemaining()
+        } else if (loadCounter === 2) {
+          iframe.style.height = '300px'
+          formSubmitted = true;
+          timer.style.display = 'none';
+          google.script.run.withSuccessHandler(onSuccessSubmit).updateServer(uuid, 'Submited the form');
+          function onSuccessSubmit(message) {
+            h1.innerText = message;
+          }
+        }
+      }
+      iframe.src = 'https://docs.google.com/forms/d/e/1FAIpQLSdumKMRsdve3VuTs7LmX6mTQm4jMO4Rc7ERSKwB5WcsFPLUag/viewform?embedded=true';
+      // set timer
+      document.querySelector('#time-alloted').innerText = timeAlloted;
+      const timeRemaining = new Date();
+      const [hoursRemaining, minutesRemaining, secondsRemaining] = timeAlloted.split(':');
+      timeRemaining.setHours(hoursRemaining, minutesRemaining, secondsRemaining);
+
+      function updateTimeRemaining() {
+        timeRemaining.setSeconds(timeRemaining.getSeconds() - 1);
+        const hh = timeRemaining.getHours();
+        const mm = timeRemaining.getMinutes();
+        const ss = timeRemaining.getSeconds();
+        timeRemainingSpan.innerText = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+        const ButtonSubmitClass = document.getElementsByClassName('NPEfkd');
+        if (hh === 0 && mm === 0 && ss === 0) {
+          // iframe.style.display = 'none';
+          timer.innerText = 'Silahkan Tekan Tombol Submit';
+          timer.style.justifyContent = 'center'
+          h1.innerText = 'Waktu Anda Telah Habis!';
+          return;
+        }
+        if (formSubmitted || formPaused) {
+          return;
+        }
+        setTimeout(updateTimeRemaining, 1000);
+      }
+    </script>
+  </body>
+</html>
